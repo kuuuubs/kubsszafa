@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KUUUUBS — Drop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script>
+    // Apply saved theme before paint to prevent flash
+    (function() {
+      const saved = localStorage.getItem('kubs_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
+  <style>
+    /* ========== THEME TOKENS ========== */
+    :root, [data-theme="dark"] {
+      --bg-base: #0a0a0a;
+      --bg-surface: #141414;
+      --bg-elevated: #1c1c1c;
+      --bg-floating: #242424;
+      --border-subtle: #1c1c1c;
+      --border-default: #2a2a2a;
+      --border-strong: #3a3a3a;
+      --text-primary: #f5f5f5;
+      --text-secondary: #999;
+      --text-muted: #525252;
+      --text-faint: #3a3a3a;
+      --accent: #c8a84e;
+      --accent-hover: #d4b85e;
+      --overlay: rgba(0, 0, 0, 0.85);
+      --header-bg: rgba(10, 10, 10, 0.9);
+      --card-gradient: rgba(20, 20, 20, 1);
+      --card-shadow-1: rgba(200, 168, 78, 0.03);
+      --card-shadow-2: rgba(0, 0, 0, 0.4);
+      --close-btn-bg: rgba(0, 0, 0, 0.6);
+      --grain-opacity: 0.03;
+      --logo-invert: 0;
+      --badge-avail-bg: #1a2e1a; --badge-avail-text: #4ade80; --badge-avail-border: #2d4a2d;
+      --badge-res-bg: #2e2a1a; --badge-res-text: #c8a84e; --badge-res-border: #4a3d1a;
+      --badge-sold-bg: #2e1a1a; --badge-sold-text: #ef4444; --badge-sold-border: #4a1a1a;
+      --btn-disabled-bg: #2a2a2a; --btn-disabled-text: #525252;
+      --clipboard-bg: #1a2e1a; --clipboard-border: #2d4a2d;
+      --clipboard-preview-bg: #0a1a0a; --clipboard-preview-border: #1a3a1a;
+      --size-tag-bg: #1c1c1c; --size-tag-border: #2a2a2a; --size-tag-text: #999;
+      --scrollbar-track: #0a0a0a; --scrollbar-thumb: #2a2a2a; --scrollbar-thumb-hover: #3a3a3a;
+    }
+
+    [data-theme="light"] {
+      --bg-base: #f5f3ef;
+      --bg-surface: #ffffff;
+      --bg-elevated: #f0ede8;
+      --bg-floating: #e8e5df;
+      --border-subtle: #e0ddd6;
+      --border-default: #d0cdc5;
+      --border-strong: #b8b5ad;
+      --text-primary: #1a1a1a;
+      --text-secondary: #555;
+      --text-muted: #888;
+      --text-faint: #bbb;
+      --accent: #a08530;
+      --accent-hover: #b8972e;
+      --overlay: rgba(0, 0, 0, 0.5);
+      --header-bg: rgba(245, 243, 239, 0.92);
+      --card-gradient: rgba(255, 255, 255, 1);
+      --card-shadow-1: rgba(160, 133, 48, 0.06);
+      --card-shadow-2: rgba(0, 0, 0, 0.08);
+      --close-btn-bg: rgba(255, 255, 255, 0.8);
+      --grain-opacity: 0.015;
+      --logo-invert: 1;
+      --badge-avail-bg: #e6f5e6; --badge-avail-text: #16a34a; --badge-avail-border: #bfe0bf;
+      --badge-res-bg: #fef3cd; --badge-res-text: #a08530; --badge-res-border: #e0d09a;
+      --badge-sold-bg: #fde8e8; --badge-sold-text: #dc2626; --badge-sold-border: #e0b0b0;
+      --btn-disabled-bg: #e0ddd6; --btn-disabled-text: #aaa;
+      --clipboard-bg: #e6f5e6; --clipboard-border: #bfe0bf;
+      --clipboard-preview-bg: #f0faf0; --clipboard-preview-border: #d0e8d0;
+      --size-tag-bg: #f0ede8; --size-tag-border: #d0cdc5; --size-tag-text: #666;
+      --scrollbar-track: #f5f3ef; --scrollbar-thumb: #d0cdc5; --scrollbar-thumb-hover: #b8b5ad;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* Password gate */
+    .gate-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+    }
+    .gate-overlay.hidden { pointer-events: none; }
+
+    /* Wardrobe doors */
+    .gate-door {
+      position: fixed;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: var(--bg-base);
+      z-index: 9998;
+      transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1), box-shadow 1.2s ease;
+      will-change: transform;
+      display: flex;
+      align-items: center;
+    }
+    .gate-door-left {
+      left: 0;
+      transform-origin: left center;
+      justify-content: flex-end;
+      padding-right: 0;
+    }
+    .gate-door-right {
+      right: 0;
+      transform-origin: right center;
+      justify-content: flex-start;
+      padding-left: 0;
+    }
+    .gate-overlay.opening .gate-door-left {
+      transform: perspective(1800px) rotateY(-105deg);
+      box-shadow: 20px 0 60px rgba(0,0,0,0.5);
+    }
+    .gate-overlay.opening .gate-door-right {
+      transform: perspective(1800px) rotateY(105deg);
+      box-shadow: -20px 0 60px rgba(0,0,0,0.5);
+    }
+    .gate-overlay.opened .gate-door-left,
+    .gate-overlay.opened .gate-door-right {
+      visibility: hidden;
+    }
+
+    /* Logo halves on doors */
+    .gate-logo-half {
+      pointer-events: none;
+    }
+    .gate-logo-half img {
+      display: block;
+      height: 360px;
+      width: auto;
+    }
+    /* Pull images inward so face halves touch at the seam */
+    .gate-door-left .gate-logo-half {
+      margin-right: -180px;
+    }
+    .gate-door-right .gate-logo-half {
+      margin-left: -180px;
+    }
+
+    /* Input — floats centered on top of doors */
+    .gate-input-wrap {
+      position: fixed;
+      z-index: 9999;
+      top: calc(50% + 170px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: opacity 0.3s ease;
+    }
+    .gate-overlay.opening .gate-input-wrap { opacity: 0; pointer-events: none; }
+    .gate-overlay.opened .gate-input-wrap { visibility: hidden; }
+
+    .gate-input {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-align: center;
+      padding: 18px 36px;
+      width: 320px;
+      outline: none;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .gate-input:focus {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 4px rgba(200, 168, 78, 0.15);
+    }
+    .gate-input::placeholder { color: rgba(255, 255, 255, 0.35); letter-spacing: 0.25em; font-weight: 400; transition: opacity 0.2s ease; }
+    .gate-input:focus::placeholder { opacity: 0; }
+    .gate-input.shake { animation: shake 0.4s ease; }
+    [data-theme="light"] .gate-input {
+      background: rgba(0, 0, 0, 0.06);
+      border-color: rgba(0, 0, 0, 0.12);
+      color: #1a1a1a;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+    [data-theme="light"] .gate-input:focus {
+      background: rgba(0, 0, 0, 0.1);
+      border-color: rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(160, 133, 48, 0.15);
+    }
+    [data-theme="light"] .gate-input::placeholder { color: rgba(0, 0, 0, 0.3); transition: opacity 0.2s ease; }
+    [data-theme="light"] .gate-input:focus::placeholder { opacity: 0; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+
+    /* Grain overlay */
+    .grain::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 1;
+      opacity: var(--grain-opacity);
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    /* Product card */
+    .product-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, background 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-default);
+    }
+    .product-card:active { transform: translateY(-2px); }
+    .product-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .product-card .card-img {
+      width: 100%; aspect-ratio: 3/4; object-fit: cover;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .product-card:hover .card-img { transform: scale(1.03); }
+
+    .card-shadow {
+      box-shadow:
+        0 2px 8px var(--card-shadow-1),
+        0 8px 24px var(--card-shadow-2);
+    }
+
+    /* Status badges */
+    .badge-available { background: var(--badge-avail-bg); color: var(--badge-avail-text); border: 1px solid var(--badge-avail-border); }
+    .badge-reserved { background: var(--badge-res-bg); color: var(--badge-res-text); border: 1px solid var(--badge-res-border); }
+    .badge-sold { background: var(--badge-sold-bg); color: var(--badge-sold-text); border: 1px solid var(--badge-sold-border); }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--overlay);
+      backdrop-filter: blur(0px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0.35s ease, backdrop-filter 0.35s ease;
+    }
+    .modal-backdrop.active {
+      opacity: 1; visibility: visible;
+      backdrop-filter: blur(8px);
+    }
+    .modal-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-floating);
+      max-width: 1000px; width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 0px;
+      transition: background 0.4s ease;
+      /* FLIP animation — these get set dynamically */
+      transform-origin: top left;
+    }
+    .modal-content.morphing {
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-radius 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.3s ease;
+      overflow: hidden;
+    }
+    .modal-content.morphing-reverse {
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-radius 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.25s ease 0.1s;
+      overflow: hidden;
+    }
+    /* Inner content fade in */
+    .modal-inner {
+      opacity: 0;
+      transition: opacity 0.2s ease 0.3s;
+    }
+    .modal-backdrop.active .modal-inner {
+      opacity: 1;
+    }
+    .modal-inner.closing {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    /* Gallery */
+    .gallery-main {
+      width: 100%; aspect-ratio: 1; object-fit: cover;
+      background: var(--bg-base);
+    }
+    .gallery-thumb {
+      width: 72px; height: 72px; object-fit: cover;
+      border: 2px solid transparent;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s ease, border-color 0.2s ease;
+    }
+    .gallery-thumb:hover { opacity: 0.8; }
+    .gallery-thumb.active {
+      border-color: var(--accent);
+      opacity: 1;
+    }
+    .gallery-thumb:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Reserve button */
+    .btn-reserve {
+      background: var(--accent);
+      color: var(--bg-base);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      padding: 16px 32px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+    .btn-reserve:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-reserve:active { transform: translateY(0); }
+    .btn-reserve:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+    .btn-reserve:disabled {
+      background: var(--btn-disabled-bg);
+      color: var(--btn-disabled-text);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+    /* Smooth reveal */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up:nth-child(1) { animation-delay: 0.05s; }
+    .fade-up:nth-child(2) { animation-delay: 0.1s; }
+    .fade-up:nth-child(3) { animation-delay: 0.15s; }
+    .fade-up:nth-child(4) { animation-delay: 0.2s; }
+    .fade-up:nth-child(5) { animation-delay: 0.25s; }
+    .fade-up:nth-child(6) { animation-delay: 0.3s; }
+    .fade-up:nth-child(7) { animation-delay: 0.35s; }
+    .fade-up:nth-child(8) { animation-delay: 0.4s; }
+
+    .size-tag {
+      background: var(--size-tag-bg);
+      border: 1px solid var(--size-tag-border);
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      color: var(--size-tag-text);
+      font-family: 'Space Grotesk', sans-serif;
+      transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* ========== THEME SWITCH ========== */
+    /* Logo container */
+    .logo-wrap { background: transparent; }
+
+    .theme-switch {
+      position: relative;
+      width: 72px; height: 34px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .theme-switch-track {
+      position: absolute; inset: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: 17px;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .theme-switch:hover .theme-switch-track {
+      border-color: var(--border-strong);
+    }
+    .theme-switch-thumb {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 28px; height: 28px;
+      background: var(--text-primary);
+      border-radius: 50%;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+      z-index: 2;
+    }
+    [data-theme="dark"] .theme-switch-thumb {
+      transform: translateX(38px);
+    }
+    .theme-switch-icon {
+      position: absolute;
+      top: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .theme-switch-icon svg {
+      width: 16px; height: 16px;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .theme-switch-sun {
+      left: 0;
+    }
+    .theme-switch-moon {
+      right: 0;
+    }
+    /* Active icon styling */
+    [data-theme="light"] .theme-switch-sun svg { opacity: 1; transform: scale(1.1); color: var(--accent); }
+    [data-theme="light"] .theme-switch-moon svg { opacity: 0.35; }
+    [data-theme="dark"] .theme-switch-sun svg { opacity: 0.35; }
+    [data-theme="dark"] .theme-switch-moon svg { opacity: 1; transform: scale(1.1); color: var(--accent); }
+
+    .theme-switch:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 17px;
+    }
+
+    /* ========== RESERVE POPUP ========== */
+    .reserve-popup-backdrop {
+      position: fixed; inset: 0; z-index: 200;
+      background: var(--overlay);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .reserve-popup-backdrop.active { opacity: 1; visibility: visible; }
+    .reserve-popup {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      padding: 36px 32px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      transform: translateY(16px) scale(0.97);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s ease, border-color 0.4s ease;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+    }
+    .reserve-popup-backdrop.active .reserve-popup {
+      transform: translateY(0) scale(1);
+    }
+    .reserve-popup-icon {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--badge-avail-bg);
+      border: 1px solid var(--badge-avail-border);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 1.5rem;
+    }
+    .reserve-popup-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .reserve-popup-msg {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .reserve-popup-preview {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 14px 16px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 24px;
+      transition: background 0.4s ease, border-color 0.4s ease;
+    }
+    .reserve-popup-confirm {
+      background: var(--accent);
+      color: var(--bg-base);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      padding: 14px 32px;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+      width: 100%;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .reserve-popup-confirm:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .reserve-popup-confirm:active { transform: translateY(0); }
+    .reserve-popup-confirm:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+
+    /* ========== ETHEREAL SHADOW BACKGROUND ========== */
+    #ethereal-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      width: 100%;
+      height: 100%;
+    }
+    .ethereal-noise-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px 200px;
+    }
+
+    /* Ensure content sits above background */
+    #app { position: relative; z-index: 2; }
+    .modal-backdrop { z-index: 100; }
+  </style>
+</head>
+<body class="grain">
+
+  <!-- ETHEREAL SHADOW BACKGROUND -->
+  <canvas id="ethereal-canvas"></canvas>
+  <div class="ethereal-noise-overlay"></div>
+
+  <!-- PASSWORD GATE -->
+  <div id="gate" class="gate-overlay">
+    <div class="gate-door gate-door-left">
+      <div class="gate-logo-half">
+        <img src="brand_assets/lewe logo png.png" alt="">
+      </div>
+    </div>
+    <div class="gate-door gate-door-right">
+      <div class="gate-logo-half">
+        <img src="brand_assets/prawe logo png.png" alt="">
+      </div>
+    </div>
+    <div class="gate-input-wrap">
+      <p style="font-family: 'Space Grotesk', sans-serif; font-size: 0.7rem; letter-spacing: 0.25em; color: rgba(255,255,255,0.4); margin-bottom: 14px; text-transform: uppercase;">HASLO</p>
+      <input
+        id="gate-input"
+        class="gate-input"
+        type="password"
+        placeholder="••••••"
+        autocomplete="off"
+        autofocus
+      >
+      <p id="gate-error" style="color: #ef4444; font-size: 0.7rem; margin-top: 14px; letter-spacing: 0.1em; opacity: 0; transition: opacity 0.3s; font-family: 'Space Grotesk', sans-serif;">Bledne haslo</p>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="app" style="opacity: 0; transition: opacity 0.5s ease;">
+
+    <!-- Header -->
+    <header style="border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; z-index: 40; background: var(--header-bg); backdrop-filter: blur(12px); transition: background 0.4s ease, border-color 0.4s ease;">
+      <div style="max-width: 1280px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <img src="brand_assets/kubs logo normalne (4).png" alt="KUUUUBS" style="height: 36px; width: auto;">
+          <span style="font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.08em;">KUUUUBS</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <span id="drop-name-header" style="font-family: 'Space Grotesk', sans-serif; font-size: 0.75rem; letter-spacing: 0.15em; color: var(--accent);"></span>
+          <span id="item-count" style="font-size: 0.7rem; letter-spacing: 0.1em; color: var(--text-muted);"></span>
+
+          <!-- THEME SWITCH -->
+          <div class="theme-switch" id="theme-switch" role="switch" aria-checked="false" aria-label="Przelacz motyw" tabindex="0">
+            <div class="theme-switch-track"></div>
+            <div class="theme-switch-thumb"></div>
+            <span class="theme-switch-icon theme-switch-sun">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+              </svg>
+            </span>
+            <span class="theme-switch-icon theme-switch-moon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Drop banner -->
+    <section id="drop-banner" style="max-width: 1280px; margin: 0 auto; padding: 48px 24px 24px;">
+      <h1 id="drop-title" style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;"></h1>
+      <p id="drop-description" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 12px; line-height: 1.7; max-width: 600px;"></p>
+    </section>
+
+    <!-- Products grid -->
+    <main id="products-grid" style="max-width: 1280px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+    </main>
+
+    <!-- Empty state -->
+    <div id="empty-state" style="display: none; text-align: center; padding: 120px 24px;">
+      <p style="font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 0.1em;">BRAK PRODUKTOW W TYM DROPIE</p>
+    </div>
+
+    <!-- Footer -->
+    <footer style="border-top: 1px solid var(--border-subtle); margin-top: 80px; padding: 32px 24px; text-align: center; transition: border-color 0.4s ease;">
+      <p style="font-size: 0.7rem; color: var(--text-faint); letter-spacing: 0.15em; font-family: 'Space Grotesk', sans-serif;">KUUUUBS © 2026 — WSZELKIE PRAWA ZASTRZEZONE</p>
+    </footer>
+  </div>
+
+  <!-- PRODUCT MODAL -->
+  <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-content" id="modal-content">
+      <div class="modal-inner" id="modal-inner">
+      <div style="display: grid; grid-template-columns: 1fr 1fr;" id="modal-grid">
+        <!-- Gallery -->
+        <div style="background: var(--bg-base); position: relative; transition: background 0.4s ease;">
+          <img id="modal-main-img" class="gallery-main" src="" alt="">
+          <div id="modal-thumbs" style="display: flex; gap: 8px; padding: 12px; background: var(--bg-base); overflow-x: auto; transition: background 0.4s ease;"></div>
+          <!-- Close button -->
+          <button id="modal-close" style="position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; background: var(--close-btn-bg); border: 1px solid var(--border-default); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: background 0.2s;" aria-label="Zamknij">&#10005;</button>
+        </div>
+        <!-- Info -->
+        <div style="padding: 40px 32px; display: flex; flex-direction: column;">
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+              <span id="modal-badge" style="font-size: 0.65rem; letter-spacing: 0.1em; padding: 4px 12px; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif;"></span>
+            </div>
+            <h2 id="modal-title" style="font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em;"></h2>
+            <p id="modal-price" style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; color: var(--accent); margin-top: 8px; font-weight: 600;"></p>
+
+            <div style="width: 40px; height: 1px; background: var(--border-default); margin: 24px 0; transition: background 0.4s ease;"></div>
+
+            <p id="modal-desc" style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.7;"></p>
+
+            <div id="modal-size-section" style="margin-top: 24px;">
+              <p style="font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif;">ROZMIAR</p>
+              <span id="modal-size" class="size-tag"></span>
+            </div>
+
+            <div id="modal-condition-section" style="margin-top: 20px;">
+              <p style="font-size: 0.7rem; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 6px; font-family: 'Space Grotesk', sans-serif;">STAN</p>
+              <p id="modal-condition" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+            </div>
+          </div>
+
+          <button id="modal-reserve-btn" class="btn-reserve" style="margin-top: 32px;">
+            REZERWUJ
+          </button>
+
+        </div>
+      </div>
+      </div><!-- /modal-inner -->
+    </div>
+  </div>
+
+  <!-- RESERVE POPUP -->
+  <div id="reserve-popup" class="reserve-popup-backdrop">
+    <div class="reserve-popup">
+      <div class="reserve-popup-icon">&#9989;</div>
+      <h3 class="reserve-popup-title">WIADOMOSC SKOPIOWANA</h3>
+      <p class="reserve-popup-msg">
+        Wiadomosc rezerwacyjna zostala skopiowana do schowka.<br>
+        Po kliknieciu <strong>"PRZEJDZ DO MESSENGERA"</strong> wklej ja w oknie czatu <strong>(Ctrl+V)</strong> i wyslij.
+      </p>
+      <div id="reserve-popup-preview" class="reserve-popup-preview"></div>
+      <button id="reserve-popup-confirm" class="reserve-popup-confirm">PRZEJDZ DO MESSENGERA</button>
+    </div>
+  </div>
+
+  <script>
+    // ========== THEME TOGGLE ==========
+    const themeSwitch = document.getElementById('theme-switch');
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('kubs_theme', theme);
+      themeSwitch.setAttribute('aria-checked', theme === 'dark' ? 'true' : 'false');
+    }
+
+    themeSwitch.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+    themeSwitch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        themeSwitch.click();
+      }
+    });
+
+    // Set initial aria state
+    setTheme(localStorage.getItem('kubs_theme') || 'dark');
+
+    // ========== DATA LAYER ==========
+    const STORAGE_KEY = 'kubs_drop_data';
+    const FB_PAGE = 'kuuuubspage';
+
+    function getData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return getDefaultData();
+      try { return JSON.parse(raw); } catch { return getDefaultData(); }
+    }
+
+    function getDefaultData() {
+      return {
+        password: 'kubs2026',
+        dropName: 'DROP #1',
+        dropDescription: 'Nowa kolekcja juz dostepna. Kazdy produkt w jednym egzemplarzu.',
+        isOpen: true,
+        products: [
+          {
+            id: '1',
+            name: 'Nike Dunk Low Panda',
+            price: 450,
+            description: 'Klasyczne Dunki w kolorystyce panda. Stan idealny, noszone 2 razy. Oryginalne pudelko w zestawie.',
+            size: '43',
+            condition: '9/10',
+            status: 'available',
+            images: [
+              'https://placehold.co/600x800/141414/525252?text=Nike+Dunk+1',
+              'https://placehold.co/600x800/141414/525252?text=Nike+Dunk+2',
+              'https://placehold.co/600x800/141414/525252?text=Nike+Dunk+3',
+            ]
+          },
+          {
+            id: '2',
+            name: 'Supreme Box Logo Hoodie FW21',
+            price: 1800,
+            description: 'Kultowa bluza Supreme z haftowanym box logo. Kolor czarny, rozmiar L. Komplet z receiptem.',
+            size: 'L',
+            condition: '9.5/10',
+            status: 'available',
+            images: [
+              'https://placehold.co/600x800/141414/525252?text=Supreme+1',
+              'https://placehold.co/600x800/141414/525252?text=Supreme+2',
+            ]
+          },
+          {
+            id: '3',
+            name: 'Jordan 4 Retro Black Cat',
+            price: 1200,
+            description: 'Jordan 4 Black Cat w stanie DS. Nigdy nie noszone, pelen komplet.',
+            size: '44',
+            condition: 'DS (10/10)',
+            status: 'reserved',
+            images: [
+              'https://placehold.co/600x800/141414/525252?text=Jordan+4+1',
+              'https://placehold.co/600x800/141414/525252?text=Jordan+4+2',
+            ]
+          },
+          {
+            id: '4',
+            name: 'Stussy 8 Ball Tee',
+            price: 180,
+            description: 'Vintage Stussy tee z kultowym printem 8 Ball. Rozmiar M, lekkie slady noszenia.',
+            size: 'M',
+            condition: '7/10',
+            status: 'available',
+            images: [
+              'https://placehold.co/600x800/141414/525252?text=Stussy+1',
+            ]
+          },
+        ]
+      };
+    }
+
+    // Init default data if nothing stored
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getDefaultData()));
+    }
+
+    // ========== PASSWORD GATE ==========
+    const gate = document.getElementById('gate');
+    const gateInput = document.getElementById('gate-input');
+    const gateError = document.getElementById('gate-error');
+    const app = document.getElementById('app');
+
+    // Skip gate if already authenticated
+    if (sessionStorage.getItem('kubs_auth') === 'true') {
+      gate.classList.add('opened');
+      gate.classList.add('hidden');
+      app.style.opacity = '1';
+    }
+
+    function openWardrobe() {
+      sessionStorage.setItem('kubs_auth', 'true');
+
+      // Start door opening animation
+      gate.classList.add('opening');
+      app.style.opacity = '1';
+
+      // After doors finish opening, mark as fully opened
+      setTimeout(() => {
+        gate.classList.add('opened');
+        gate.classList.add('hidden');
+      }, 1400);
+    }
+
+    gateInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const data = getData();
+        if (gateInput.value === data.password) {
+          openWardrobe();
+        } else {
+          gateInput.classList.add('shake');
+          gateError.style.opacity = '1';
+          setTimeout(() => gateInput.classList.remove('shake'), 400);
+          setTimeout(() => gateError.style.opacity = '0', 2000);
+        }
+      }
+    });
+
+    // ========== RENDER PRODUCTS ==========
+    function renderProducts() {
+      const data = getData();
+      const grid = document.getElementById('products-grid');
+      const emptyState = document.getElementById('empty-state');
+      const dropTitle = document.getElementById('drop-title');
+      const dropDesc = document.getElementById('drop-description');
+      const dropNameHeader = document.getElementById('drop-name-header');
+      const itemCount = document.getElementById('item-count');
+
+      dropTitle.textContent = data.dropName;
+      dropDesc.textContent = data.dropDescription;
+      dropNameHeader.textContent = data.dropName;
+
+      if (!data.products || data.products.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+        itemCount.textContent = '';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      emptyState.style.display = 'none';
+      itemCount.textContent = `${data.products.length} ITEMS`;
+
+      // Sort: sold items go to the end
+      const sorted = [...data.products].sort((a, b) => {
+        if (a.status === 'sold' && b.status !== 'sold') return 1;
+        if (a.status !== 'sold' && b.status === 'sold') return -1;
+        return 0;
+      });
+
+      grid.innerHTML = sorted.map((p, i) => {
+        const statusLabel = p.status === 'available' ? 'DOSTEPNY' : p.status === 'reserved' ? 'ZAREZERWOWANY' : 'SPRZEDANY';
+        const badgeClass = p.status === 'available' ? 'badge-available' : p.status === 'reserved' ? 'badge-reserved' : 'badge-sold';
+        const isSold = p.status === 'sold';
+        const soldStyle = isSold ? 'filter: grayscale(1); pointer-events: none;' : '';
+        const soldOverlay = isSold ? `<div style="position: absolute; inset: 0; background: var(--bg-base); opacity: 0.7; z-index: 2; pointer-events: none;"></div>` : '';
+
+        return `
+          <div class="product-card card-shadow fade-up" tabindex="0" data-id="${p.id}" style="${soldStyle}" onclick="openModal('${p.id}')" onkeydown="if(event.key==='Enter')openModal('${p.id}')">
+            ${soldOverlay}
+            <div style="overflow: hidden; position: relative;">
+              <img class="card-img" src="${p.images[0]}" alt="${p.name}" loading="lazy">
+              <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to top, var(--card-gradient), transparent); pointer-events: none;"></div>
+            </div>
+            <div style="padding: 16px 18px 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <h3 style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 0.9rem; letter-spacing: -0.01em; line-height: 1.3; flex: 1; margin-right: 12px;">${p.name}</h3>
+                <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 0.95rem; color: var(--accent); white-space: nowrap;">${p.price} PLN</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.7rem; color: var(--text-muted);">Rozmiar: ${p.size || '—'}</span>
+                <span class="${badgeClass}" style="font-size: 0.6rem; padding: 3px 10px; letter-spacing: 0.08em; font-family: 'Space Grotesk', sans-serif;">${statusLabel}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ========== MODAL ==========
+    const modal = document.getElementById('modal');
+    const modalContent = document.getElementById('modal-content');
+    const modalInner = document.getElementById('modal-inner');
+    const modalClose = document.getElementById('modal-close');
+    const modalMainImg = document.getElementById('modal-main-img');
+    const modalThumbs = document.getElementById('modal-thumbs');
+    const modalTitle = document.getElementById('modal-title');
+    const modalPrice = document.getElementById('modal-price');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalBadge = document.getElementById('modal-badge');
+    const modalSize = document.getElementById('modal-size');
+    const modalCondition = document.getElementById('modal-condition');
+    const modalReserveBtn = document.getElementById('modal-reserve-btn');
+    const modalSizeSection = document.getElementById('modal-size-section');
+    const modalConditionSection = document.getElementById('modal-condition-section');
+
+    let currentProduct = null;
+    let lastClickedCard = null;
+
+    function openModal(id, event) {
+      const data = getData();
+      const product = data.products.find(p => p.id === id);
+      if (!product) return;
+
+      // Find the clicked card element
+      const cardEl = document.querySelector(`.product-card[data-id="${id}"]`);
+      lastClickedCard = cardEl;
+
+      currentProduct = product;
+
+      // Populate modal content
+      modalTitle.textContent = product.name;
+      modalPrice.textContent = `${product.price} PLN`;
+      modalDesc.textContent = product.description;
+
+      const statusLabel = product.status === 'available' ? 'DOSTEPNY' : product.status === 'reserved' ? 'ZAREZERWOWANY' : 'SPRZEDANY';
+      const badgeClass = product.status === 'available' ? 'badge-available' : product.status === 'reserved' ? 'badge-reserved' : 'badge-sold';
+      modalBadge.textContent = statusLabel;
+      modalBadge.className = badgeClass;
+
+      if (product.size) {
+        modalSizeSection.style.display = 'block';
+        modalSize.textContent = product.size;
+      } else {
+        modalSizeSection.style.display = 'none';
+      }
+
+      if (product.condition) {
+        modalConditionSection.style.display = 'block';
+        modalCondition.textContent = product.condition;
+      } else {
+        modalConditionSection.style.display = 'none';
+      }
+
+      modalMainImg.src = product.images[0];
+      modalThumbs.innerHTML = product.images.map((img, i) => `
+        <img class="gallery-thumb ${i === 0 ? 'active' : ''}" src="${img}" alt="Zdjecie ${i+1}" tabindex="0"
+          onclick="switchImage(this, '${img}')" onkeydown="if(event.key==='Enter')switchImage(this,'${img}')">
+      `).join('');
+
+      if (product.status === 'available') {
+        modalReserveBtn.disabled = false;
+        modalReserveBtn.textContent = 'REZERWUJ';
+        modalReserveBtn.style.background = '';
+        modalReserveBtn.style.color = '';
+      } else if (product.status === 'reserved') {
+        modalReserveBtn.disabled = true;
+        modalReserveBtn.textContent = 'ZAREZERWOWANY';
+        modalReserveBtn.style.background = '';
+        modalReserveBtn.style.color = '';
+      } else {
+        modalReserveBtn.disabled = true;
+        modalReserveBtn.textContent = 'SPRZEDANY';
+        modalReserveBtn.style.background = '';
+        modalReserveBtn.style.color = '';
+      }
+
+      // === FLIP ANIMATION: Open ===
+      modalInner.classList.remove('closing');
+
+      if (cardEl) {
+        const cardRect = cardEl.getBoundingClientRect();
+
+        // Show modal to measure final position
+        modal.style.transition = 'none';
+        modal.classList.add('active');
+
+        const modalRect = modalContent.getBoundingClientRect();
+
+        // Calculate FLIP transforms
+        const scaleX = cardRect.width / modalRect.width;
+        const scaleY = cardRect.height / modalRect.height;
+        const translateX = cardRect.left - modalRect.left;
+        const translateY = cardRect.top - modalRect.top;
+
+        // Set initial state (card position)
+        modalContent.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+        modalContent.style.borderRadius = '0px';
+        modalContent.classList.add('morphing');
+
+        // Force reflow
+        modalContent.offsetHeight;
+
+        // Re-enable backdrop transition
+        modal.style.transition = '';
+
+        // Animate to final state
+        requestAnimationFrame(() => {
+          modalContent.style.transform = 'translate(0, 0) scale(1, 1)';
+          modalContent.style.borderRadius = '0px';
+        });
+
+        // Clean up after animation
+        setTimeout(() => {
+          modalContent.classList.remove('morphing');
+          modalContent.style.transform = '';
+        }, 500);
+      } else {
+        modal.classList.add('active');
+      }
+
+      document.body.style.overflow = 'hidden';
+    }
+
+    function switchImage(thumb, src) {
+      modalMainImg.src = src;
+      document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+    }
+
+    function closeModal() {
+      if (!modal.classList.contains('active')) return;
+      modal.classList.remove('active');
+      modalContent.style.transform = '';
+      modalInner.classList.remove('closing');
+      document.body.style.overflow = '';
+      currentProduct = null;
+      lastClickedCard = null;
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ========== RESERVE BUTTON ==========
+    const reservePopup = document.getElementById('reserve-popup');
+    const reservePopupPreview = document.getElementById('reserve-popup-preview');
+    const reservePopupConfirm = document.getElementById('reserve-popup-confirm');
+
+    modalReserveBtn.addEventListener('click', () => {
+      if (!currentProduct || currentProduct.status !== 'available') return;
+
+      // 1. Update status to reserved
+      const data = getData();
+      const product = data.products.find(p => p.id === currentProduct.id);
+      if (product) {
+        product.status = 'reserved';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+
+      // 2. Build message
+      const plainMessage =
+        `Czesc! Chcialbym zarezerwowac:\n\n` +
+        `${currentProduct.name}\n` +
+        `${currentProduct.price} PLN\n` +
+        `Rozmiar: ${currentProduct.size || 'N/A'}\n\n` +
+        `Prosze o potwierdzenie dostepnosci!`;
+
+      // 3. Copy to clipboard
+      navigator.clipboard.writeText(plainMessage).catch(() => {});
+
+      // 4. Update modal UI
+      modalReserveBtn.disabled = true;
+      modalReserveBtn.textContent = 'ZAREZERWOWANY';
+      modalBadge.textContent = 'ZAREZERWOWANY';
+      modalBadge.className = 'badge-reserved';
+      currentProduct.status = 'reserved';
+      renderProducts();
+
+      // 5. Close product modal and show popup
+      closeModal();
+      reservePopupPreview.textContent = plainMessage;
+      reservePopup.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+
+    // Confirm button — opens Messenger
+    reservePopupConfirm.addEventListener('click', () => {
+      window.open(`https://m.me/${FB_PAGE}`, '_blank');
+      reservePopup.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+
+    // Close popup on backdrop click
+    reservePopup.addEventListener('click', (e) => {
+      if (e.target === reservePopup) {
+        reservePopup.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // ========== RESPONSIVE MODAL ==========
+    function handleResize() {
+      const modalGrid = document.getElementById('modal-grid');
+      if (window.innerWidth < 768) {
+        modalGrid.style.gridTemplateColumns = '1fr';
+      } else {
+        modalGrid.style.gridTemplateColumns = '1fr 1fr';
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // ========== INIT ==========
+    renderProducts();
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) {
+        renderProducts();
+      }
+    });
+  </script>
+
+  <!-- ETHEREAL SHADOW ANIMATION (Canvas) -->
+  <script>
+    (function() {
+      const canvas = document.getElementById('ethereal-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      let w, h;
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // Simplex-like noise using sin combinations
+      function noise(x, y, t) {
+        return (
+          Math.sin(x * 0.8 + t * 0.4) *
+          Math.cos(y * 0.6 - t * 0.3) *
+          0.5 +
+          Math.sin(x * 0.4 - t * 0.2 + y * 0.3) *
+          Math.cos(y * 0.5 + t * 0.25) *
+          0.3 +
+          Math.sin((x + y) * 0.3 + t * 0.15) * 0.2
+        );
+      }
+
+      // Shadow wave parameters — multiple layers for depth
+      const waves = [
+        { freqX: 0.003, freqY: 0.004, speed: 0.0008, opacity: 0.45, offsetX: 0, offsetY: 0 },
+        { freqX: 0.002, freqY: 0.003, speed: 0.0006, opacity: 0.35, offsetX: 100, offsetY: 50 },
+        { freqX: 0.004, freqY: 0.002, speed: 0.001,  opacity: 0.25, offsetX: 200, offsetY: 150 },
+        { freqX: 0.005, freqY: 0.006, speed: 0.0012, opacity: 0.15, offsetX: 50, offsetY: 200 },
+      ];
+
+      let time = 0;
+      const step = 6; // pixel step for performance
+
+      function getColors() {
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        if (isDark) {
+          return {
+            bg: [10, 10, 10],
+            shadow: [0, 0, 0],
+            highlight: [30, 28, 22],
+            strength: 1.0,
+          };
+        } else {
+          return {
+            bg: [245, 243, 239],
+            shadow: [140, 135, 125],
+            highlight: [255, 255, 252],
+            strength: 0.55,
+          };
+        }
+      }
+
+      function draw() {
+        time++;
+        const colors = getColors();
+        const imgData = ctx.createImageData(w, h);
+        const data = imgData.data;
+
+        for (let y = 0; y < h; y += step) {
+          for (let x = 0; x < w; x += step) {
+            let val = 0;
+            for (let i = 0; i < waves.length; i++) {
+              const wv = waves[i];
+              const nx = (x + wv.offsetX) * wv.freqX;
+              const ny = (y + wv.offsetY) * wv.freqY;
+              val += noise(nx, ny, time * wv.speed) * wv.opacity;
+            }
+
+            // Map noise to shadow intensity (0 = shadow, 1 = highlight)
+            const intensity = (val + 1) * 0.5; // normalize to 0-1
+            const shadowMix = Math.pow(1 - intensity, 1.8) * colors.strength;
+
+            const r = Math.round(colors.bg[0] * (1 - shadowMix) + colors.shadow[0] * shadowMix);
+            const g = Math.round(colors.bg[1] * (1 - shadowMix) + colors.shadow[1] * shadowMix);
+            const b = Math.round(colors.bg[2] * (1 - shadowMix) + colors.shadow[2] * shadowMix);
+
+            // Fill the step x step block
+            for (let dy = 0; dy < step && (y + dy) < h; dy++) {
+              for (let dx = 0; dx < step && (x + dx) < w; dx++) {
+                const idx = ((y + dy) * w + (x + dx)) * 4;
+                data[idx]     = r;
+                data[idx + 1] = g;
+                data[idx + 2] = b;
+                data[idx + 3] = 255;
+              }
+            }
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+
+        // Apply blur by drawing canvas onto itself scaled
+        ctx.filter = 'blur(8px)';
+        ctx.drawImage(canvas, 0, 0);
+        ctx.filter = 'none';
+
+        requestAnimationFrame(draw);
+      }
+
+      requestAnimationFrame(draw);
+    })();
+  </script>
+</body>
+</html>
