@@ -1037,14 +1037,7 @@
     modalReserveBtn.addEventListener('click', async () => {
       if (!currentProduct || currentProduct.status !== 'available') return;
 
-      // 1. Update status to reserved via API
-      await fetch('/api/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: currentProduct.id })
-      });
-
-      // 2. Build message
+      // 1. Build message and copy IMMEDIATELY (before any await — iOS requires this)
       const plainMessage =
         `Czesc! Chcialbym zarezerwowac:\n\n` +
         `${currentProduct.name}\n` +
@@ -1052,24 +1045,27 @@
         `Rozmiar: ${currentProduct.size || 'N/A'}\n\n` +
         `Prosze o potwierdzenie dostepnosci!`;
 
-      // 3. Copy to clipboard
-      // Copy to clipboard (with iOS Safari fallback)
-      try {
-        await navigator.clipboard.writeText(plainMessage);
-      } catch {
-        const ta = document.createElement('textarea');
-        ta.value = plainMessage;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        ta.style.top = '-9999px';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
+      // Synchronous copy — must happen in direct click handler before any async
+      const ta = document.createElement('textarea');
+      ta.value = plainMessage;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
 
-      // 4. Update modal UI
+      // 2. Update status to reserved via API (async, after copy)
+      fetch('/api/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentProduct.id })
+      });
+
+      // 3. Update modal UI
       modalReserveBtn.disabled = true;
       modalReserveBtn.textContent = 'ZAREZERWOWANY';
       modalBadge.textContent = 'ZAREZERWOWANY';
