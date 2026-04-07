@@ -723,81 +723,11 @@
     setTheme(localStorage.getItem('kubs_theme') || 'dark');
 
     // ========== DATA LAYER ==========
-    const STORAGE_KEY = 'kubs_drop_data';
     const FB_PAGE = 'kuuuubspage';
 
-    function getData() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return getDefaultData();
-      try { return JSON.parse(raw); } catch { return getDefaultData(); }
-    }
-
-    function getDefaultData() {
-      return {
-        password: 'kubs2026',
-        dropName: 'DROP #1',
-        dropDescription: 'Nowa kolekcja juz dostepna. Kazdy produkt w jednym egzemplarzu.',
-        isOpen: true,
-        products: [
-          {
-            id: '1',
-            name: 'Nike Dunk Low Panda',
-            price: 450,
-            description: 'Klasyczne Dunki w kolorystyce panda. Stan idealny, noszone 2 razy. Oryginalne pudelko w zestawie.',
-            size: '43',
-            condition: '9/10',
-            status: 'available',
-            images: [
-              'https://placehold.co/600x800/141414/525252?text=Nike+Dunk+1',
-              'https://placehold.co/600x800/141414/525252?text=Nike+Dunk+2',
-              'https://placehold.co/600x800/141414/525252?text=Nike+Dunk+3',
-            ]
-          },
-          {
-            id: '2',
-            name: 'Supreme Box Logo Hoodie FW21',
-            price: 1800,
-            description: 'Kultowa bluza Supreme z haftowanym box logo. Kolor czarny, rozmiar L. Komplet z receiptem.',
-            size: 'L',
-            condition: '9.5/10',
-            status: 'available',
-            images: [
-              'https://placehold.co/600x800/141414/525252?text=Supreme+1',
-              'https://placehold.co/600x800/141414/525252?text=Supreme+2',
-            ]
-          },
-          {
-            id: '3',
-            name: 'Jordan 4 Retro Black Cat',
-            price: 1200,
-            description: 'Jordan 4 Black Cat w stanie DS. Nigdy nie noszone, pelen komplet.',
-            size: '44',
-            condition: 'DS (10/10)',
-            status: 'reserved',
-            images: [
-              'https://placehold.co/600x800/141414/525252?text=Jordan+4+1',
-              'https://placehold.co/600x800/141414/525252?text=Jordan+4+2',
-            ]
-          },
-          {
-            id: '4',
-            name: 'Stussy 8 Ball Tee',
-            price: 180,
-            description: 'Vintage Stussy tee z kultowym printem 8 Ball. Rozmiar M, lekkie slady noszenia.',
-            size: 'M',
-            condition: '7/10',
-            status: 'available',
-            images: [
-              'https://placehold.co/600x800/141414/525252?text=Stussy+1',
-            ]
-          },
-        ]
-      };
-    }
-
-    // Init default data if nothing stored
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(getDefaultData()));
+    async function getData() {
+      const res = await fetch('/api/data');
+      return res.json();
     }
 
     // ========== PASSWORD GATE ==========
@@ -827,9 +757,9 @@
       }, 1400);
     }
 
-    gateInput.addEventListener('keydown', (e) => {
+    gateInput.addEventListener('keydown', async (e) => {
       if (e.key === 'Enter') {
-        const data = getData();
+        const data = await getData();
         if (gateInput.value === data.password) {
           openWardrobe();
         } else {
@@ -842,8 +772,8 @@
     });
 
     // ========== RENDER PRODUCTS ==========
-    function renderProducts() {
-      const data = getData();
+    async function renderProducts() {
+      const data = await getData();
       const grid = document.getElementById('products-grid');
       const emptyState = document.getElementById('empty-state');
       const dropTitle = document.getElementById('drop-title');
@@ -922,8 +852,8 @@
     let currentProduct = null;
     let lastClickedCard = null;
 
-    function openModal(id, event) {
-      const data = getData();
+    async function openModal(id, event) {
+      const data = await getData();
       const product = data.products.find(p => p.id === id);
       if (!product) return;
 
@@ -1056,16 +986,15 @@
     const reservePopupPreview = document.getElementById('reserve-popup-preview');
     const reservePopupConfirm = document.getElementById('reserve-popup-confirm');
 
-    modalReserveBtn.addEventListener('click', () => {
+    modalReserveBtn.addEventListener('click', async () => {
       if (!currentProduct || currentProduct.status !== 'available') return;
 
-      // 1. Update status to reserved
-      const data = getData();
-      const product = data.products.find(p => p.id === currentProduct.id);
-      if (product) {
-        product.status = 'reserved';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      }
+      // 1. Update status to reserved via API
+      await fetch('/api/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentProduct.id })
+      });
 
       // 2. Build message
       const plainMessage =
@@ -1122,12 +1051,6 @@
 
     // ========== INIT ==========
     renderProducts();
-
-    window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_KEY) {
-        renderProducts();
-      }
-    });
   </script>
 
   <!-- ETHEREAL SHADOW ANIMATION (Canvas) -->

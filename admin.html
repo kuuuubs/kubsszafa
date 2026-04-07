@@ -400,20 +400,25 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'kubs_drop_data';
     const ADMIN_PASS = 'lifeisgood';
     let uploadedImages = [];
     let editingProductId = null;
     let editImages = [];
+    let cachedData = null;
 
-    function getData() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      try { return JSON.parse(raw); } catch { return null; }
+    async function getData() {
+      const res = await fetch('/api/data');
+      cachedData = await res.json();
+      return cachedData;
     }
 
-    function saveData(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    async function saveData(data) {
+      await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, adminPassword: data.password })
+      });
+      cachedData = data;
     }
 
     function showToast(msg) {
@@ -451,8 +456,8 @@
     });
 
     // ========== SETTINGS ==========
-    function loadSettings() {
-      const data = getData();
+    async function loadSettings() {
+      const data = await getData();
       if (!data) return;
       document.getElementById('set-drop-name').value = data.dropName || '';
       document.getElementById('set-password').value = data.password || '';
@@ -478,19 +483,20 @@
       }
     });
 
-    function saveSettings() {
-      const data = getData();
+    async function saveSettings() {
+      const data = await getData();
       data.dropName = document.getElementById('set-drop-name').value;
       data.password = document.getElementById('set-password').value;
       data.dropDescription = document.getElementById('set-drop-desc').value;
       data.isOpen = document.getElementById('toggle-open').classList.contains('active');
-      saveData(data);
+      await saveData(data);
       showToast('USTAWIENIA ZAPISANE');
     }
 
-    function resetAll() {
+    async function resetAll() {
       if (!confirm('Czy na pewno chcesz usunąć WSZYSTKIE dane? Tej operacji nie można cofnąć.')) return;
-      localStorage.removeItem(STORAGE_KEY);
+      const defaultData = { password: 'kubs2026', dropName: 'DROP #1', dropDescription: '', isOpen: true, products: [] };
+      await saveData(defaultData);
       location.reload();
     }
 
@@ -543,7 +549,7 @@
     }
 
     // ========== ADD PRODUCT ==========
-    function addProduct() {
+    async function addProduct() {
       const name = document.getElementById('prod-name').value.trim();
       const price = parseInt(document.getElementById('prod-price').value);
       const size = document.getElementById('prod-size').value.trim();
@@ -557,18 +563,16 @@
       }
 
       let images = [];
-      // URLs from textarea
       if (imagesText) {
         images = imagesText.split('\n').map(u => u.trim()).filter(u => u);
       }
-      // Uploaded files (base64)
       images = images.concat(uploadedImages);
 
       if (images.length === 0) {
         images = [`https://placehold.co/600x800/141414/525252?text=${encodeURIComponent(name)}`];
       }
 
-      const data = getData();
+      const data = await getData();
       const product = {
         id: Date.now().toString(),
         name,
@@ -581,9 +585,8 @@
       };
 
       data.products.push(product);
-      saveData(data);
+      await saveData(data);
 
-      // Reset form
       document.getElementById('prod-name').value = '';
       document.getElementById('prod-price').value = '';
       document.getElementById('prod-size').value = '';
@@ -593,13 +596,13 @@
       uploadedImages = [];
       renderImagePreviews();
 
-      renderProductsList();
+      await renderProductsList();
       showToast('PRODUKT DODANY');
     }
 
     // ========== PRODUCTS LIST ==========
-    function renderProductsList() {
-      const data = getData();
+    async function renderProductsList() {
+      const data = await getData();
       const container = document.getElementById('products-list');
       const countEl = document.getElementById('product-count');
 
@@ -633,18 +636,18 @@
       }).join('');
     }
 
-    function deleteProduct(id) {
+    async function deleteProduct(id) {
       if (!confirm('Usunąć ten produkt?')) return;
-      const data = getData();
+      const data = await getData();
       data.products = data.products.filter(p => p.id !== id);
-      saveData(data);
-      renderProductsList();
+      await saveData(data);
+      await renderProductsList();
       showToast('PRODUKT USUNIĘTY');
     }
 
     // ========== EDIT MODAL ==========
-    function openEditModal(id) {
-      const data = getData();
+    async function openEditModal(id) {
+      const data = await getData();
       const product = data.products.find(p => p.id === id);
       if (!product) return;
 
@@ -737,8 +740,8 @@
       if (e.key === 'Enter') { e.preventDefault(); editAddImageUrl(); }
     });
 
-    function saveEdit() {
-      const data = getData();
+    async function saveEdit() {
+      const data = await getData();
       const product = data.products.find(p => p.id === editingProductId);
       if (!product) return;
 
@@ -750,9 +753,9 @@
       product.status = document.getElementById('edit-status').value;
       product.images = editImages.length > 0 ? [...editImages] : product.images;
 
-      saveData(data);
+      await saveData(data);
       closeEditModal();
-      renderProductsList();
+      await renderProductsList();
       showToast('PRODUKT ZAKTUALIZOWANY');
     }
 
