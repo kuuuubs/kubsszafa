@@ -294,7 +294,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
             <div>
               <label>ROZMIAR</label>
               <input id="prod-size" class="admin-input" placeholder="np. 43, L, One Size">
@@ -302,6 +302,15 @@
             <div>
               <label>STAN</label>
               <input id="prod-condition" class="admin-input" placeholder="np. 9/10, DS">
+            </div>
+            <div>
+              <label>KATEGORIA</label>
+              <select id="prod-category" class="admin-select">
+                <option value="ciuchy">Ciuchy</option>
+                <option value="buty">Buty</option>
+                <option value="akcesoria">Akcesoria</option>
+                <option value="elektronika">Elektronika</option>
+              </select>
             </div>
           </div>
 
@@ -370,13 +379,24 @@
         <label>OPIS</label>
         <textarea id="edit-desc" class="admin-textarea"></textarea>
       </div>
-      <div style="margin-bottom: 16px;">
-        <label>STATUS</label>
-        <select id="edit-status" class="admin-select">
-          <option value="available">Dostępny</option>
-          <option value="reserved">Zarezerwowany</option>
-          <option value="sold">Sprzedany</option>
-        </select>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label>STATUS</label>
+          <select id="edit-status" class="admin-select">
+            <option value="available">Dostępny</option>
+            <option value="reserved">Zarezerwowany</option>
+            <option value="sold">Sprzedany</option>
+          </select>
+        </div>
+        <div>
+          <label>KATEGORIA</label>
+          <select id="edit-category" class="admin-select">
+            <option value="ciuchy">Ciuchy</option>
+            <option value="buty">Buty</option>
+            <option value="akcesoria">Akcesoria</option>
+            <option value="elektronika">Elektronika</option>
+          </select>
+        </div>
       </div>
       <div style="margin-bottom: 16px;">
         <label>ZDJECIA</label>
@@ -572,6 +592,8 @@
         images = [`https://placehold.co/600x800/141414/525252?text=${encodeURIComponent(name)}`];
       }
 
+      const category = document.getElementById('prod-category').value;
+
       const data = await getData();
       const product = {
         id: Date.now().toString(),
@@ -580,6 +602,7 @@
         description: desc,
         size,
         condition,
+        category,
         status: 'available',
         images,
       };
@@ -660,6 +683,7 @@
       document.getElementById('edit-condition').value = product.condition || '';
       document.getElementById('edit-desc').value = product.description || '';
       document.getElementById('edit-status').value = product.status;
+      document.getElementById('edit-category').value = product.category || 'ciuchy';
       document.getElementById('edit-img-url').value = '';
 
       renderEditImagePreviews();
@@ -751,6 +775,7 @@
       product.condition = document.getElementById('edit-condition').value.trim();
       product.description = document.getElementById('edit-desc').value.trim();
       product.status = document.getElementById('edit-status').value;
+      product.category = document.getElementById('edit-category').value;
       product.images = editImages.length > 0 ? [...editImages] : product.images;
 
       await saveData(data);

@@ -449,6 +449,34 @@
       border-radius: 17px;
     }
 
+    /* ========== CATEGORY FILTERS ========== */
+    .filter-btn {
+      background: transparent;
+      border: 1px solid var(--border-default);
+      color: var(--text-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      padding: 8px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .filter-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg-base);
+    }
+    .filter-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
     /* ========== RESERVE POPUP ========== */
     .reserve-popup-backdrop {
       position: fixed; inset: 0; z-index: 200;
@@ -622,6 +650,15 @@
       <p id="drop-description" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 12px; line-height: 1.7; max-width: 600px;"></p>
     </section>
 
+    <!-- Category filters -->
+    <div id="filters" style="max-width: 1280px; margin: 0 auto; padding: 0 24px 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="filter-btn active" data-category="all" onclick="setFilter('all')">WSZYSTKO</button>
+      <button class="filter-btn" data-category="ciuchy" onclick="setFilter('ciuchy')">CIUCHY</button>
+      <button class="filter-btn" data-category="buty" onclick="setFilter('buty')">BUTY</button>
+      <button class="filter-btn" data-category="akcesoria" onclick="setFilter('akcesoria')">AKCESORIA</button>
+      <button class="filter-btn" data-category="elektronika" onclick="setFilter('elektronika')">ELEKTRONIKA</button>
+    </div>
+
     <!-- Products grid -->
     <main id="products-grid" style="max-width: 1280px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
     </main>
@@ -793,8 +830,13 @@
       emptyState.style.display = 'none';
       itemCount.textContent = `${data.products.length} ITEMS`;
 
+      // Filter by category
+      const filtered = currentFilter === 'all'
+        ? data.products
+        : data.products.filter(p => p.category === currentFilter);
+
       // Sort: sold items go to the end
-      const sorted = [...data.products].sort((a, b) => {
+      const sorted = [...filtered].sort((a, b) => {
         if (a.status === 'sold' && b.status !== 'sold') return 1;
         if (a.status !== 'sold' && b.status === 'sold') return -1;
         return 0;
@@ -847,6 +889,15 @@
     const modalConditionSection = document.getElementById('modal-condition-section');
 
     let currentProduct = null;
+    let currentFilter = 'all';
+
+    function setFilter(category) {
+      currentFilter = category;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === category);
+      });
+      renderProducts();
+    }
     let lastClickedCard = null;
 
     async function openModal(id, event) {
