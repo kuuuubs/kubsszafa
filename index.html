@@ -1053,7 +1053,21 @@
         `Prosze o potwierdzenie dostepnosci!`;
 
       // 3. Copy to clipboard
-      navigator.clipboard.writeText(plainMessage).catch(() => {});
+      // Copy to clipboard (with iOS Safari fallback)
+      try {
+        await navigator.clipboard.writeText(plainMessage);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = plainMessage;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
 
       // 4. Update modal UI
       modalReserveBtn.disabled = true;
