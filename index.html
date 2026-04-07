@@ -595,7 +595,6 @@
           <span style="font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.08em;">KUUUUBS</span>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
-          <span id="drop-name-header" style="font-family: 'Space Grotesk', sans-serif; font-size: 0.75rem; letter-spacing: 0.15em; color: var(--accent);"></span>
           <span id="item-count" style="font-size: 0.7rem; letter-spacing: 0.1em; color: var(--text-muted);"></span>
 
           <!-- THEME SWITCH -->
@@ -778,12 +777,10 @@
       const emptyState = document.getElementById('empty-state');
       const dropTitle = document.getElementById('drop-title');
       const dropDesc = document.getElementById('drop-description');
-      const dropNameHeader = document.getElementById('drop-name-header');
       const itemCount = document.getElementById('item-count');
 
       dropTitle.textContent = data.dropName;
       dropDesc.textContent = data.dropDescription;
-      dropNameHeader.textContent = data.dropName;
 
       if (!data.products || data.products.length === 0) {
         grid.style.display = 'none';
