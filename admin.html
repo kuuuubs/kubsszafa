@@ -28,6 +28,11 @@
       }
     }
   </script>
+  <script type="module">
+    // Vercel Speed Insights
+    import { injectSpeedInsights } from 'https://esm.sh/@vercel/speed-insights@2.0.0';
+    injectSpeedInsights();
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #f5f5f5; min-height: 100vh; }

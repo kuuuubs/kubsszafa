@@ -14,6 +14,11 @@
       document.documentElement.setAttribute('data-theme', saved);
     })();
   </script>
+  <script type="module">
+    // Vercel Speed Insights
+    import { injectSpeedInsights } from 'https://esm.sh/@vercel/speed-insights@2.0.0';
+    injectSpeedInsights();
+  </script>
   <style>
     /* ========== THEME TOKENS ========== */
     :root, [data-theme="dark"] {
