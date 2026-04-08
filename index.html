@@ -811,10 +811,13 @@
 
     // ========== DATA LAYER ==========
     const FB_PAGE = 'kuuuubspage';
+    let cachedData = null;
 
-    async function getData() {
+    async function getData(forceRefresh) {
+      if (cachedData && !forceRefresh) return cachedData;
       const res = await fetch('/api/data');
-      return res.json();
+      cachedData = await res.json();
+      return cachedData;
     }
 
     // ========== PASSWORD GATE ==========
@@ -1127,6 +1130,7 @@
       modalBadge.textContent = 'ZAREZERWOWANY';
       modalBadge.className = 'badge-reserved';
       currentProduct.status = 'reserved';
+      cachedData = null;
       renderProducts();
 
       // 5. Close product modal and show popup
