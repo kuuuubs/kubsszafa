@@ -449,6 +449,57 @@
       border-radius: 17px;
     }
 
+    /* ========== RESPONSIVE GRID ========== */
+    @media (min-width: 768px) {
+      #products-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 20px !important;
+        padding: 24px !important;
+      }
+    }
+    @media (min-width: 1024px) {
+      #products-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+    }
+
+    /* ========== MOBILE OPTIMIZATIONS ========== */
+    @media (max-width: 640px) {
+      .gate-logo-half img {
+        height: 220px;
+      }
+      .gate-door-left .gate-logo-half {
+        margin-right: -110px;
+      }
+      .gate-door-right .gate-logo-half {
+        margin-left: -110px;
+      }
+      .gate-input-wrap {
+        top: calc(50% + 100px);
+      }
+      .gate-input {
+        width: 260px;
+        padding: 14px 24px;
+        font-size: 0.9rem;
+      }
+      #drop-banner h1 {
+        font-size: 1.6rem !important;
+      }
+      .filter-btn {
+        padding: 6px 12px;
+        font-size: 0.6rem;
+      }
+      .modal-content {
+        max-height: 100vh !important;
+        height: 100%;
+        width: 100% !important;
+      }
+      .reserve-popup {
+        max-width: 340px !important;
+        padding: 28px 24px !important;
+      }
+    }
+
     /* ========== CATEGORY FILTERS ========== */
     .filter-btn {
       background: transparent;
@@ -660,7 +711,7 @@
     </div>
 
     <!-- Products grid -->
-    <main id="products-grid" style="max-width: 1280px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+    <main id="products-grid" style="max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
     </main>
 
     <!-- Empty state -->
@@ -858,7 +909,7 @@
           <div class="product-card card-shadow fade-up" tabindex="0" data-id="${p.id}" style="${soldStyle}" onclick="openModal('${p.id}')" onkeydown="if(event.key==='Enter')openModal('${p.id}')">
             ${soldOverlay}
             <div style="overflow: hidden; position: relative;">
-              <img class="card-img" src="${p.images[0]}" alt="${p.name}" loading="lazy">
+              <img class="card-img" src="${p.images[0]}" alt="${p.name}" loading="lazy" decoding="async">
               <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to top, var(--card-gradient), transparent); pointer-events: none;"></div>
             </div>
             <div style="padding: 16px 18px 20px;">

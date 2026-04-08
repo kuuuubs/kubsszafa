@@ -550,15 +550,32 @@
       handleFiles(fileInput.files);
     });
 
-    function handleFiles(files) {
-      for (const file of files) {
-        if (!file.type.startsWith('image/')) continue;
+    function compressImage(file, maxWidth, quality) {
+      return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          uploadedImages.push(e.target.result);
-          renderImagePreviews();
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1);
+            canvas.width = img.width * ratio;
+            canvas.height = img.height * ratio;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/webp', quality));
+          };
+          img.src = e.target.result;
         };
         reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFiles(files) {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const compressed = await compressImage(file, 800, 0.7);
+        uploadedImages.push(compressed);
+        renderImagePreviews();
       }
     }
 
@@ -756,15 +773,12 @@
       editFileInput.value = '';
     });
 
-    function editHandleFiles(files) {
+    async function editHandleFiles(files) {
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          editImages.push(e.target.result);
-          renderEditImagePreviews();
-        };
-        reader.readAsDataURL(file);
+        const compressed = await compressImage(file, 800, 0.7);
+        editImages.push(compressed);
+        renderEditImagePreviews();
       }
     }
 
