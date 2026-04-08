@@ -271,12 +271,11 @@
     .modal-content {
       background: var(--bg-surface);
       border: 1px solid var(--bg-floating);
-      max-width: 1000px; width: 95%;
+      max-width: 500px; width: 92%;
       max-height: 90vh;
       overflow-y: auto;
-      border-radius: 0px;
+      border-radius: 12px;
       transition: background 0.4s ease;
-      /* FLIP animation — these get set dynamically */
       transform-origin: top left;
     }
     .modal-content.morphing {
@@ -306,8 +305,10 @@
 
     /* Gallery */
     .gallery-main {
-      width: 100%; aspect-ratio: 1; object-fit: contain;
-      background: var(--bg-surface);
+      width: 100%;
+      max-height: 50vh;
+      object-fit: cover;
+      display: block;
     }
 
     /* Gallery arrows */
@@ -533,13 +534,6 @@
       .reserve-popup {
         max-width: 340px !important;
         padding: 28px 24px !important;
-      }
-      .modal-content {
-        max-height: 85vh !important;
-        height: auto !important;
-        width: 92% !important;
-        border-radius: 12px !important;
-        margin: auto;
       }
     }
 
@@ -772,9 +766,9 @@
   <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true">
     <div class="modal-content" id="modal-content">
       <div class="modal-inner" id="modal-inner">
-      <div style="display: grid; grid-template-columns: 1fr 1fr;" id="modal-grid">
+      <div id="modal-grid">
         <!-- Gallery -->
-        <div style="position: relative; overflow: hidden; background: var(--bg-surface);">
+        <div style="position: relative; overflow: hidden;">
           <img id="modal-main-img" class="gallery-main" src="" alt="" style="display: block;">
           <!-- Arrow navigation -->
           <button id="gallery-prev" class="gallery-arrow gallery-arrow-left" aria-label="Poprzednie">&#8249;</button>
@@ -785,7 +779,7 @@
           <button id="modal-close" style="position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; background: var(--close-btn-bg); border: 1px solid var(--border-default); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: background 0.2s;" aria-label="Zamknij">&#10005;</button>
         </div>
         <!-- Info -->
-        <div style="padding: 40px 32px; display: flex; flex-direction: column;">
+        <div style="padding: 24px 28px 28px; display: flex; flex-direction: column;">
           <div style="flex: 1;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
               <span id="modal-badge" style="font-size: 0.65rem; letter-spacing: 0.1em; padding: 4px 12px; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif;"></span>
@@ -1229,18 +1223,6 @@
         document.body.style.overflow = '';
       }
     });
-
-    // ========== RESPONSIVE MODAL ==========
-    function handleResize() {
-      const modalGrid = document.getElementById('modal-grid');
-      if (window.innerWidth < 768) {
-        modalGrid.style.gridTemplateColumns = '1fr';
-      } else {
-        modalGrid.style.gridTemplateColumns = '1fr 1fr';
-      }
-    }
-    window.addEventListener('resize', handleResize);
-    handleResize();
 
     // ========== INIT ==========
     renderProducts();
