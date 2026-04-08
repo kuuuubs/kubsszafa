@@ -420,11 +420,11 @@
   </div>
 
   <script>
-    const ADMIN_PASS = 'lifeisgood';
     let uploadedImages = [];
     let editingProductId = null;
     let editImages = [];
     let cachedData = null;
+    let adminToken = '';
 
     async function getData() {
       const res = await fetch('/api/data');
@@ -436,7 +436,7 @@
       await fetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, adminPassword: data.password })
+        body: JSON.stringify({ ...data, adminPassword: adminToken })
       });
       cachedData = data;
     }
@@ -460,9 +460,16 @@
       renderProductsList();
     }
 
-    adminPass.addEventListener('keydown', (e) => {
+    adminPass.addEventListener('keydown', async (e) => {
       if (e.key === 'Enter') {
-        if (adminPass.value === ADMIN_PASS) {
+        const verifyRes = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: adminPass.value, type: 'admin' })
+        });
+        const { success } = await verifyRes.json();
+        if (success) {
+          adminToken = adminPass.value;
           sessionStorage.setItem('kubs_admin_auth', 'true');
           adminGate.style.display = 'none';
           adminApp.style.display = 'block';

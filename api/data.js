@@ -6,6 +6,7 @@ const kv = new Redis({
 });
 
 const KV_KEY = 'kubs_drop_data';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'lifeisgood';
 
 const DEFAULT_DATA = {
   password: 'kubs2026',
@@ -44,8 +45,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method === 'GET') {
-    const data = await kv.get(KV_KEY);
-    return res.json(data || DEFAULT_DATA);
+    const data = await kv.get(KV_KEY) || DEFAULT_DATA;
+    // Strip password from public response
+    const { password, ...publicData } = data;
+    return res.json(publicData);
   }
 
   if (req.method === 'POST') {
@@ -53,10 +56,7 @@ export default async function handler(req, res) {
     const adminPassword = body.adminPassword;
     delete body.adminPassword;
 
-    const current = await kv.get(KV_KEY);
-    const storedPass = current?.password || DEFAULT_DATA.password;
-
-    if (adminPassword !== storedPass) {
+    if (adminPassword !== ADMIN_PASSWORD) {
       return res.status(401).json({ error: 'unauthorized' });
     }
 

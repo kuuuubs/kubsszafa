@@ -795,8 +795,13 @@
 
     gateInput.addEventListener('keydown', async (e) => {
       if (e.key === 'Enter') {
-        const data = await getData();
-        if (gateInput.value === data.password) {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: gateInput.value })
+        });
+        const { success } = await res.json();
+        if (success) {
           openWardrobe();
         } else {
           gateInput.classList.add('shake');
