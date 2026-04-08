@@ -6,10 +6,10 @@ const kv = new Redis({
 });
 
 const KV_KEY = 'kubs_drop_data';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'lifeisgood';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
 
 const DEFAULT_DATA = {
-  password: 'kubs2026',
+  password: process.env.DROP_PASSWORD || 'changeme',
   dropName: 'DROP #1',
   dropDescription: 'Nowa kolekcja juz dostepna. Kazdy produkt w jednym egzemplarzu.',
   isOpen: true,
@@ -58,6 +58,14 @@ export default async function handler(req, res) {
 
     if (adminPassword !== ADMIN_PASSWORD) {
       return res.status(401).json({ error: 'unauthorized' });
+    }
+
+    // Preserve existing password if not provided in update
+    const current = await kv.get(KV_KEY);
+    if (!body.password && current?.password) {
+      body.password = current.password;
+    } else if (!body.password) {
+      body.password = DEFAULT_DATA.password;
     }
 
     await kv.set(KV_KEY, body);

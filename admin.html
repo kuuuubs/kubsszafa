@@ -487,7 +487,8 @@
       const data = await getData();
       if (!data) return;
       document.getElementById('set-drop-name').value = data.dropName || '';
-      document.getElementById('set-password').value = data.password || '';
+      // Password is not returned by public API — admin sets it, doesn't read it
+      document.getElementById('set-password').value = '';
       document.getElementById('set-drop-desc').value = data.dropDescription || '';
       const toggle = document.getElementById('toggle-open');
       if (data.isOpen) {
@@ -513,7 +514,8 @@
     async function saveSettings() {
       const data = await getData();
       data.dropName = document.getElementById('set-drop-name').value;
-      data.password = document.getElementById('set-password').value;
+      const newPass = document.getElementById('set-password').value.trim();
+      if (newPass) data.password = newPass;
       data.dropDescription = document.getElementById('set-drop-desc').value;
       data.isOpen = document.getElementById('toggle-open').classList.contains('active');
       await saveData(data);
@@ -522,7 +524,7 @@
 
     async function resetAll() {
       if (!confirm('Czy na pewno chcesz usunąć WSZYSTKIE dane? Tej operacji nie można cofnąć.')) return;
-      const defaultData = { password: 'kubs2026', dropName: 'DROP #1', dropDescription: '', isOpen: true, products: [] };
+      const defaultData = { dropName: 'DROP #1', dropDescription: '', isOpen: true, products: [] };
       await saveData(defaultData);
       location.reload();
     }

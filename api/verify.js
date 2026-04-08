@@ -6,8 +6,8 @@ const kv = new Redis({
 });
 
 const KV_KEY = 'kubs_drop_data';
-const DEFAULT_PASSWORD = 'kubs2026';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'lifeisgood';
+const DEFAULT_PASSWORD = process.env.DROP_PASSWORD || 'changeme';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
