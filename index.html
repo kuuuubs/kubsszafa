@@ -526,6 +526,14 @@
         padding: 6px 12px;
         font-size: 0.6rem;
       }
+      .sort-select {
+        padding: 6px 28px 6px 12px;
+        font-size: 0.6rem;
+      }
+      #filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
       .modal-content {
         max-height: 85vh !important;
         width: 90% !important;
@@ -534,6 +542,36 @@
         max-width: 340px !important;
         padding: 28px 24px !important;
       }
+    }
+
+    /* ========== SORT SELECT ========== */
+    .sort-select {
+      background: transparent;
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      padding: 8px 32px 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23999' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: border-color 0.2s ease;
+    }
+    .sort-select:hover { border-color: var(--border-strong); }
+    .sort-select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .sort-select option {
+      background: var(--bg-surface);
+      color: var(--text-primary);
     }
 
     /* ========== CATEGORY FILTERS ========== */
@@ -737,13 +775,20 @@
       <p id="drop-description" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 12px; line-height: 1.7; max-width: 600px;"></p>
     </section>
 
-    <!-- Category filters -->
-    <div id="filters" style="max-width: 1280px; margin: 0 auto; padding: 0 24px 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-      <button class="filter-btn active" data-category="all" onclick="setFilter('all')">WSZYSTKO</button>
-      <button class="filter-btn" data-category="ciuchy" onclick="setFilter('ciuchy')">CIUCHY</button>
-      <button class="filter-btn" data-category="buty" onclick="setFilter('buty')">BUTY</button>
-      <button class="filter-btn" data-category="akcesoria" onclick="setFilter('akcesoria')">AKCESORIA</button>
-      <button class="filter-btn" data-category="elektronika" onclick="setFilter('elektronika')">ELEKTRONIKA</button>
+    <!-- Category filters + sort -->
+    <div id="filters-bar" style="max-width: 1280px; margin: 0 auto; padding: 0 24px 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="filter-btn active" data-category="all" onclick="setFilter('all')">WSZYSTKO</button>
+        <button class="filter-btn" data-category="ciuchy" onclick="setFilter('ciuchy')">CIUCHY</button>
+        <button class="filter-btn" data-category="buty" onclick="setFilter('buty')">BUTY</button>
+        <button class="filter-btn" data-category="akcesoria" onclick="setFilter('akcesoria')">AKCESORIA</button>
+        <button class="filter-btn" data-category="elektronika" onclick="setFilter('elektronika')">ELEKTRONIKA</button>
+      </div>
+      <select id="sort-select" class="sort-select" onchange="setSort(this.value)">
+        <option value="newest">NAJNOWSZE</option>
+        <option value="price-desc">CENA: NAJDROZSZE</option>
+        <option value="price-asc">CENA: NAJTANSZE</option>
+      </select>
     </div>
 
     <!-- Products grid -->
@@ -934,11 +979,15 @@
         ? data.products
         : data.products.filter(p => p.category === currentFilter);
 
-      // Sort: sold items go to the end
+      // Sort: sold items always at the end, then apply user sort
       const sorted = [...filtered].sort((a, b) => {
         if (a.status === 'sold' && b.status !== 'sold') return 1;
         if (a.status !== 'sold' && b.status === 'sold') return -1;
-        return 0;
+
+        if (currentSort === 'price-desc') return (b.price || 0) - (a.price || 0);
+        if (currentSort === 'price-asc') return (a.price || 0) - (b.price || 0);
+        // newest: by id (timestamp), descending
+        return (parseInt(b.id) || 0) - (parseInt(a.id) || 0);
       });
 
       grid.innerHTML = sorted.map((p, i) => {
@@ -993,12 +1042,18 @@
 
     let currentProduct = null;
     let currentFilter = 'all';
+    let currentSort = 'newest';
 
     function setFilter(category) {
       currentFilter = category;
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.category === category);
       });
+      renderProducts();
+    }
+
+    function setSort(value) {
+      currentSort = value;
       renderProducts();
     }
     let lastClickedCard = null;
