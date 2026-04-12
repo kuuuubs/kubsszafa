@@ -902,7 +902,7 @@
 
     async function getData(forceRefresh) {
       if (cachedData && !forceRefresh) return cachedData;
-      const res = await fetch('/api/data');
+      const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
       cachedData = await res.json();
       return cachedData;
     }

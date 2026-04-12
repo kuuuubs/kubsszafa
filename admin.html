@@ -429,7 +429,7 @@
     let adminToken = '';
 
     async function getData() {
-      const res = await fetch('/api/data');
+      const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
       cachedData = await res.json();
       return cachedData;
     }
@@ -438,9 +438,10 @@
       await fetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, adminPassword: adminToken })
+        body: JSON.stringify({ ...data, adminPassword: adminToken }),
+        cache: 'no-store'
       });
-      cachedData = data;
+      cachedData = null;
     }
 
     function showToast(msg) {
