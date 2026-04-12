@@ -435,13 +435,23 @@
     }
 
     async function saveData(data) {
-      await fetch('/api/data', {
+      const res = await fetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, adminPassword: adminToken }),
         cache: 'no-store'
       });
       cachedData = null;
+      if (!res.ok) {
+        if (res.status === 401) {
+          sessionStorage.removeItem('kubs_admin_token');
+          showToast('SESJA WYGASLA - ZALOGUJ SIE PONOWNIE');
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          showToast('BLAD ZAPISU (' + res.status + ')');
+        }
+        throw new Error('Save failed: ' + res.status);
+      }
     }
 
     function showToast(msg) {
@@ -456,7 +466,10 @@
     const adminApp = document.getElementById('admin-app');
     const adminPass = document.getElementById('admin-pass');
 
-    if (sessionStorage.getItem('kubs_admin_auth') === 'true') {
+    // Restore admin token from sessionStorage if present
+    const savedToken = sessionStorage.getItem('kubs_admin_token');
+    if (savedToken) {
+      adminToken = savedToken;
       adminGate.style.display = 'none';
       adminApp.style.display = 'block';
       loadSettings();
@@ -473,7 +486,7 @@
         const { success } = await verifyRes.json();
         if (success) {
           adminToken = adminPass.value;
-          sessionStorage.setItem('kubs_admin_auth', 'true');
+          sessionStorage.setItem('kubs_admin_token', adminToken);
           adminGate.style.display = 'none';
           adminApp.style.display = 'block';
           loadSettings();
