@@ -865,10 +865,10 @@
       <h3 class="reserve-popup-title">WIADOMOSC SKOPIOWANA</h3>
       <p class="reserve-popup-msg">
         Wiadomosc rezerwacyjna zostala skopiowana do schowka.<br>
-        Po kliknieciu <strong>"PRZEJDZ DO MESSENGERA"</strong> wklej ja w oknie czatu <strong>(Ctrl+V)</strong> i wyslij.
+        Kliknij <strong>"POTWIERDZ REZERWACJE"</strong> aby zarezerwowac produkt i przejsc do Messengera, gdzie wklejasz wiadomosc <strong>(Ctrl+V)</strong> i wysylasz.
       </p>
       <div id="reserve-popup-preview" class="reserve-popup-preview"></div>
-      <button id="reserve-popup-confirm" class="reserve-popup-confirm">PRZEJDZ DO MESSENGERA</button>
+      <button id="reserve-popup-confirm" class="reserve-popup-confirm">POTWIERDZ REZERWACJE</button>
     </div>
   </div>
 
@@ -1217,11 +1217,12 @@
     const reservePopup = document.getElementById('reserve-popup');
     const reservePopupPreview = document.getElementById('reserve-popup-preview');
     const reservePopupConfirm = document.getElementById('reserve-popup-confirm');
+    let pendingReservation = null;
 
-    modalReserveBtn.addEventListener('click', async () => {
+    modalReserveBtn.addEventListener('click', () => {
       if (!currentProduct || currentProduct.status !== 'available') return;
 
-      // 1. Build message and copy IMMEDIATELY (before any await — iOS requires this)
+      // 1. Build message and copy IMMEDIATELY (sync — iOS requires this)
       const plainMessage =
         `Czesc! Chcialbym zarezerwowac:\n\n` +
         `${currentProduct.name}\n` +
@@ -1229,7 +1230,6 @@
         `Rozmiar: ${currentProduct.size || 'N/A'}\n\n` +
         `Prosze o potwierdzenie dostepnosci!`;
 
-      // Synchronous copy — must happen in direct click handler before any async
       const ta = document.createElement('textarea');
       ta.value = plainMessage;
       ta.style.position = 'fixed';
@@ -1242,39 +1242,40 @@
       document.execCommand('copy');
       document.body.removeChild(ta);
 
-      // 2. Update status to reserved via API (async, after copy)
-      fetch('/api/reserve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: currentProduct.id })
-      });
-
-      // 3. Update modal UI
-      modalReserveBtn.disabled = true;
-      modalReserveBtn.textContent = 'ZAREZERWOWANY';
-      modalBadge.textContent = 'ZAREZERWOWANY';
-      modalBadge.className = 'badge-reserved';
-      currentProduct.status = 'reserved';
-      cachedData = null;
-      renderProducts();
-
-      // 5. Close product modal and show popup
+      // 2. Store pending reservation, show popup (DO NOT reserve yet)
+      pendingReservation = { id: currentProduct.id, product: currentProduct };
       closeModal();
       reservePopupPreview.textContent = plainMessage;
       reservePopup.classList.add('active');
       document.body.style.overflow = 'hidden';
     });
 
-    // Confirm button — opens Messenger
+    // Confirm button — NOW reserve via API and open Messenger
     reservePopupConfirm.addEventListener('click', () => {
+      if (!pendingReservation) return;
+
+      // Open Messenger first (must be in sync click handler for popup-blocker)
       window.open(`https://m.me/${FB_PAGE}`, '_blank');
+
+      // Reserve via API
+      fetch('/api/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: pendingReservation.id })
+      }).then(() => {
+        cachedData = null;
+        renderProducts();
+      });
+
+      pendingReservation = null;
       reservePopup.classList.remove('active');
       document.body.style.overflow = '';
     });
 
-    // Close popup on backdrop click
+    // Close popup on backdrop click — cancels pending reservation
     reservePopup.addEventListener('click', (e) => {
       if (e.target === reservePopup) {
+        pendingReservation = null;
         reservePopup.classList.remove('active');
         document.body.style.overflow = '';
       }
