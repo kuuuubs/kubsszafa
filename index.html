@@ -913,11 +913,20 @@
     const gateError = document.getElementById('gate-error');
     const app = document.getElementById('app');
 
-    // Skip gate if already authenticated
+    // Skip gate if already authenticated OR if password is disabled in settings
     if (sessionStorage.getItem('kubs_auth') === 'true') {
       gate.classList.add('opened');
       gate.classList.add('hidden');
       app.style.opacity = '1';
+    } else {
+      // Check if password gate is disabled — skip entirely if so
+      getData().then(data => {
+        if (data.requirePassword === false) {
+          gate.classList.add('opened');
+          gate.classList.add('hidden');
+          app.style.opacity = '1';
+        }
+      });
     }
 
     function openWardrobe() {

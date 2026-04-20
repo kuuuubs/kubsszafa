@@ -273,6 +273,14 @@
             <div id="toggle-open" class="toggle-switch active" role="switch" aria-checked="true" tabindex="0"></div>
           </div>
 
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div>
+              <p style="font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; font-weight: 600;">WYMAGAJ HASŁA</p>
+              <p style="font-size: 0.75rem; color: #525252; margin-top: 4px;">Gdy wyłączone, strona ładuje się od razu bez ekranu hasła</p>
+            </div>
+            <div id="toggle-password" class="toggle-switch active" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+
           <div style="display: flex; gap: 12px;">
             <button onclick="saveSettings()" class="btn-primary">ZAPISZ USTAWIENIA</button>
             <button onclick="resetAll()" class="btn-danger">RESETUJ WSZYSTKO</button>
@@ -506,26 +514,42 @@
       // Password is not returned by public API — admin sets it, doesn't read it
       document.getElementById('set-password').value = '';
       document.getElementById('set-drop-desc').value = data.dropDescription || '';
-      const toggle = document.getElementById('toggle-open');
+      const toggleOpen = document.getElementById('toggle-open');
       if (data.isOpen) {
-        toggle.classList.add('active');
-        toggle.setAttribute('aria-checked', 'true');
+        toggleOpen.classList.add('active');
+        toggleOpen.setAttribute('aria-checked', 'true');
       } else {
-        toggle.classList.remove('active');
-        toggle.setAttribute('aria-checked', 'false');
+        toggleOpen.classList.remove('active');
+        toggleOpen.setAttribute('aria-checked', 'false');
+      }
+
+      const togglePassword = document.getElementById('toggle-password');
+      // Default to true (require password) unless explicitly false
+      const requirePass = data.requirePassword !== false;
+      if (requirePass) {
+        togglePassword.classList.add('active');
+        togglePassword.setAttribute('aria-checked', 'true');
+      } else {
+        togglePassword.classList.remove('active');
+        togglePassword.setAttribute('aria-checked', 'false');
       }
     }
 
-    document.getElementById('toggle-open').addEventListener('click', function() {
-      this.classList.toggle('active');
-      this.setAttribute('aria-checked', this.classList.contains('active'));
-    });
-    document.getElementById('toggle-open').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.click();
-      }
-    });
+    function bindToggle(id) {
+      const el = document.getElementById(id);
+      el.addEventListener('click', function() {
+        this.classList.toggle('active');
+        this.setAttribute('aria-checked', this.classList.contains('active'));
+      });
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.click();
+        }
+      });
+    }
+    bindToggle('toggle-open');
+    bindToggle('toggle-password');
 
     async function saveSettings() {
       const data = await getData();
@@ -534,6 +558,7 @@
       if (newPass) data.password = newPass;
       data.dropDescription = document.getElementById('set-drop-desc').value;
       data.isOpen = document.getElementById('toggle-open').classList.contains('active');
+      data.requirePassword = document.getElementById('toggle-password').classList.contains('active');
       await saveData(data);
       showToast('USTAWIENIA ZAPISANE');
     }
