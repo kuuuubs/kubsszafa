@@ -93,8 +93,10 @@
     /* Password gate */
     .gate-overlay {
       position: fixed; inset: 0; z-index: 9999;
+      visibility: hidden;
     }
-    .gate-overlay.hidden { pointer-events: none; }
+    .gate-overlay.show { visibility: visible; }
+    .gate-overlay.hidden { pointer-events: none; visibility: hidden; }
 
     /* Wardrobe doors */
     .gate-door {
@@ -913,21 +915,28 @@
     const gateError = document.getElementById('gate-error');
     const app = document.getElementById('app');
 
-    // Skip gate if already authenticated OR if password is disabled in settings
-    if (sessionStorage.getItem('kubs_auth') === 'true') {
-      gate.classList.add('opened');
-      gate.classList.add('hidden');
-      app.style.opacity = '1';
-    } else {
-      // Check if password gate is disabled — skip entirely if so
-      getData().then(data => {
-        if (data.requirePassword === false) {
-          gate.classList.add('opened');
-          gate.classList.add('hidden');
-          app.style.opacity = '1';
-        }
-      });
-    }
+    // Decide whether to show the gate BEFORE rendering anything visible
+    (async function initGate() {
+      // Already authenticated this session — skip gate
+      if (sessionStorage.getItem('kubs_auth') === 'true') {
+        gate.classList.add('opened');
+        gate.classList.add('hidden');
+        app.style.opacity = '1';
+        return;
+      }
+
+      // Fetch settings — if password disabled, skip gate entirely
+      const data = await getData();
+      if (data.requirePassword === false) {
+        gate.classList.add('opened');
+        gate.classList.add('hidden');
+        app.style.opacity = '1';
+      } else {
+        // Password required — show the gate
+        gate.classList.add('show');
+        gateInput.focus();
+      }
+    })();
 
     function openWardrobe() {
       sessionStorage.setItem('kubs_auth', 'true');
